@@ -4,12 +4,13 @@ import { StyleSheet, Text, View, TouchableOpacity ,Alert, TextInput, ScrollView}
 import { theme } from './color';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from '@expo/vector-icons';
+import { FontAwesome } from '@expo/vector-icons';
 
 const 로컬스토리지키 = '@TODO'
 
 
 export default function App() {
-  const [todo, setTodo] = useState({}),[working, setWorking] = useState(true),[text, setText] = useState('');
+  const [todo, setTodo] = useState({}),[working, setWorking] = useState(true),[text, setText] = useState(''),[done,setDone]=useState(false);
   const travel = () => setWorking(false),work = () => setWorking(true);
   const 입력 = (event) => {setText(event)}
   useEffect(() =>{
@@ -29,7 +30,7 @@ export default function App() {
     // const newTodo = Object.assign(
     //   {}, todo, {[Date.now()]:{text, work:working}}
     // )
-    const newTodo = {...todo, [Date.now()]:{text,working}}
+    const newTodo = {...todo, [Date.now()]:{text,working,done}}
     setTodo(newTodo)
     await 투두저장(newTodo)
     setText('');
@@ -48,6 +49,20 @@ export default function App() {
       }}
     ])
     return
+  }
+
+  const 투두완료 = (key) => {
+    const newTodo = {...todo}
+    newTodo[key].done = true
+    setTodo(newTodo)
+    투두저장(newTodo)
+  }
+
+  const 되돌리기 = (key) => {
+    const newTodo = {...todo}
+    newTodo[key].done = false
+    setTodo(newTodo)
+    투두저장(newTodo)
   }
 
   return (
@@ -73,18 +88,38 @@ export default function App() {
       <ScrollView>
         {/* Object.keys는 object에서 key만 리턴하는 함수 */}
         {Object.keys(todo).map((key) => (
-          todo[key].working === working ?
+          todo[key].working === working && todo[key].done !== true ?
           (<View style={styles.투두} key={key}>
-            <Text style={styles.투두텍스트}>
+            <Text style={{...styles.투두텍스트,flex:2.7}}>
               {todo[key].text}
             </Text>
+            <TouchableOpacity onPress={()=> 투두완료(key)} style={{marginRight:15}}>
+            <FontAwesome name="check-circle" size={20} color="white" />            
+            </TouchableOpacity>
             <TouchableOpacity onPress={() => 투두삭제(key)}>
-            <Ionicons name="md-trash-bin" size={18} color='red' />
+            <Ionicons name="md-trash-bin" size={20} color='red' />
             </TouchableOpacity>
           </View>)
           : null
         ))}
       </ScrollView>
+    <View style={styles.Done}>
+      <Text style={styles.DoneText}>
+        Finish
+      </Text>
+    </View>
+          {Object.keys(todo).map((key)=>
+          todo[key].working === working && todo[key].done === true ? 
+            <View style={styles.투두} key={key}>
+              <Text style={styles.투두텍스트}>
+                {todo[key].text}
+              </Text>
+            <TouchableOpacity onPress={()=> 되돌리기(key)} style={{marginRight:15}}>
+            <FontAwesome name="reply" size={20} color="white" />            
+            </TouchableOpacity>
+            </View> 
+            :null
+          )}
     </View>
   );
 }
@@ -113,7 +148,7 @@ const styles = StyleSheet.create({
     fontSize:18
   },
   투두:{
-    backgroundColor: 'theme.grey',
+    backgroundColor: theme.grey,
     marginBottom: 10,
     paddingVertical: 20,
     paddingHorizontal: 20,
@@ -126,5 +161,15 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 16,
     fontWeight: "500",
+  },
+  Done:{
+    flexDirection:'row',
+    justifyContent:'flex-start',
+    marginBottom:10
+  },
+  DoneText:{
+    fontSize:35,
+    fontWeight:'500',
+    color:'white'
   }
 });
